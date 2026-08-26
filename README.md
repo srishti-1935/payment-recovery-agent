@@ -1,6 +1,4 @@
-# Payment Recovery Agent
-
-Built for Razorpay's AI Buildathon 2026 — Track 03: AI Revenue Recovery.
+# PayResQ — AI-Powered Payment Recovery Agent
 
 ## The problem
 
