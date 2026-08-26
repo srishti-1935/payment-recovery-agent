@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test checkout</title>
+</head>
+<body>
+    <h2>Payment recovery agent - test checkout</h2>
+    <button id = "pay-btn">Pay ₹500 (test)</button>
+
+    <script src = "https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const ORDER_ID = "order_TUNSwA3nlNwWCx";
+        const KEY_ID = "rzp_test_TUMRUEw3hw0bFD";
+
+        document.getElementById("pay-btn").onclick = function(){
+            const options = {
+                key: KEY_ID,
+                amount: 50000, 
+                currency: "INR",
+                order_id: ORDER_ID,
+                name: "Payment recovery agent (test)",
+                description: "exploring real payment object",
+                handler: function (response){
+                    console.log("Payment response: ", response);
+                    alert(
+                        "Payment ID: " + response.razorpay_payment_id +
+                        "\nOrder ID: " + response.razorpay_order_id
+                    );
+                },
+                theme: { color : "#3399cc" }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        };
+    </script>
+</body>
+</html>
