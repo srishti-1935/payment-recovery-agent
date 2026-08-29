@@ -4,10 +4,17 @@ the classification and reasoning pipeline. Uses real error codes/schema
 discovered during live API exploration (see error_codes.py).
 """
 
+import os
 import random
 import string
 from datetime import datetime, timedelta
+
+from dotenv import load_dotenv
+from supabase import create_client
+
 from error_codes import ERROR_CODES, BUCKET_CODES
+
+load_dotenv()
 
 # How many events per bucket (totals 80)
 BUCKET_COUNTS = {
@@ -107,6 +114,16 @@ def generate_batch():
     return events
 
 
+def insert_batch_to_supabase(events):
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_ANON_KEY")
+    supabase = create_client(url, key)
+
+    result = supabase.table("payment_events").insert(events).execute()
+    print(f"Inserted {len(result.data)} rows into Supabase")
+    return result
+
+
 if __name__ == "__main__":
     batch = generate_batch()
     print(f"Generated {len(batch)} events")
@@ -125,3 +142,7 @@ if __name__ == "__main__":
 
     print("\nSample event:")
     print(batch[0])
+
+    confirm = input(f"\nInsert these {len(batch)} events into Supabase? (y/n): ")
+    if confirm.lower() == "y":
+        insert_batch_to_supabase(batch)
