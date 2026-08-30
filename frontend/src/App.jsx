@@ -26,7 +26,7 @@ function computeMetrics(events) {
     if (e.classification === 'success') continue
     atRisk += e.amount
 
-    if (e.action_taken === 'capture_and_notify' || e.action_taken === 'auto_retry') {
+    if (e.action_taken === 'auto_retry') {
       recovered += e.amount
     } else {
       unresolved += e.amount
