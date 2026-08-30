@@ -42,7 +42,6 @@ real Razorpay test-mode payments.
 - Supabase (Postgres) as the audit log — every decision traceable by
   payment ID, classification, action, and reasoning
 
-**Not yet done:** demo video, stuck-refunds bonus flow (optional per PRD).
 
 ## Results (full batch run)
 
