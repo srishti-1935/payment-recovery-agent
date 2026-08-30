@@ -1,5 +1,7 @@
 # PayResQ — AI-Powered Payment Recovery Agent
 
+**🔗 Live dashboard:** https://payment-recovery-agent-two.vercel.app
+
 ## The problem
 
 When a UPI/card payment is disrupted mid-transaction, a customer's money can be
