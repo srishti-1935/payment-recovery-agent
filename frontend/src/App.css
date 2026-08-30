@@ -35,7 +35,7 @@ header h1 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .metric-card {
@@ -64,6 +64,34 @@ header h1 {
 .metric-card.recovered .value { color: #4ade80; }
 .metric-card.unresolved .value { color: #f87171; }
 
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-pill {
+  background: #1a1d27;
+  border: 1px solid #2a2e3a;
+  color: #b8bfcc;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill:hover {
+  border-color: #4a4f5e;
+}
+
+.filter-pill.active {
+  background: #2d3348;
+  border-color: #5b6ee8;
+  color: #fff;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -84,6 +112,15 @@ th {
   font-weight: 500;
   font-size: 12px;
   text-transform: uppercase;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  color: #d0d5e0;
 }
 
 .event-row {
@@ -115,3 +152,21 @@ th {
 .status-badge.captured { background: #1a3a2a; color: #4ade80; }
 .status-badge.failed { background: #3a1a1a; color: #f87171; }
 .status-badge.created { background: #3a2f1a; color: #f0b429; }
+
+.real-badge {
+  display: inline-block;
+  background: #1a3a2a;
+  color: #4ade80;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 8px;
+  letter-spacing: 0.03em;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+}
