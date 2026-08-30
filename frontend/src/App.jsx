@@ -263,13 +263,16 @@ export default function App() {
                   <td>{ACTION_LABELS[e.action_taken] || e.action_taken || '—'}</td>
                 </tr>
                 {expandedId === e.payment_id && (
-                  <tr className="reasoning-row">
-                    <td colSpan={5}>
-                      <strong>Reasoning:</strong> {e.reasoning || 'No reasoning recorded (rules-based, no LLM call needed).'}
-                      {e.error_description && <div className="error-desc"><strong>Error:</strong> {e.error_description}</div>}
-                    </td>
-                  </tr>
-                )}
+  <tr className="reasoning-row">
+    <td colSpan={5}>
+      {e.customer_message && (
+        <div className="customer-message"><strong>Customer sees:</strong> "{e.customer_message}"</div>
+      )}
+      <div><strong>Internal reasoning:</strong> {e.reasoning || 'No reasoning recorded (rules-based, no LLM call needed).'}</div>
+      {e.error_description && <div className="error-desc"><strong>Error:</strong> {e.error_description}</div>}
+    </td>
+  </tr>
+)}
               </>
             ))}
           </tbody>

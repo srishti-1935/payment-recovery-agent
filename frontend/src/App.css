@@ -12,7 +12,7 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Inter', -apple-system, 'Noto Sans', 'Segoe UI', sans-serif;
   background: #faf3d9;
   color: #1c2430;
   min-height: 100vh;
@@ -268,6 +268,15 @@ th {
   line-height: 1.65;
   padding: 18px;
   border-left: 3px solid #2f6fed;
+}
+
+.customer-message {
+  background: #fffdf5;
+  border: 1px solid #ecdfa8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  font-style: italic;
 }
 
 .error-desc { margin-top: 8px; color: #5a5236; }

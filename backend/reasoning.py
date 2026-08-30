@@ -2,7 +2,8 @@
 Reasoning layer — handles the 'ambiguous' payment events (card_declined,
 payment_failed) that the rules layer couldn't classify deterministically.
 Calls an LLM (via OpenRouter) with full context per case, gets back a
-constrained action + free-text reasoning, and writes both back to Supabase.
+constrained action, an internal reasoning note, and a separate
+customer-facing message, then writes all three back to Supabase.
 """
 
 import os
@@ -33,14 +34,12 @@ def get_supabase_client():
 
 def build_prompt(event, customer_history):
     history_text = "No other payment attempts from this customer in this batch."
-    has_repeat_failure = False
     if customer_history:
         lines = [
             f"- {h['payment_id']}: status={h['status']}, error_code={h['error_code']}, classification={h.get('classification')}"
             for h in customer_history
         ]
         history_text = "Other payment events from this same customer in this batch:\n" + "\n".join(lines)
-        has_repeat_failure = any(h["status"] == "failed" for h in customer_history)
 
     return f"""You are a payment recovery agent reasoning about an ambiguous failed payment for Razorpay, an Indian payments platform.
 
@@ -68,7 +67,7 @@ Choose exactly ONE action from this list:
 - escalate_to_merchant: repeated failures or suspicious pattern, needs human review
 
 Respond with ONLY valid JSON, no other text, in this exact format:
-{{"action": "one_of_the_four_options_above", "reasoning": "1-2 sentence explanation of your judgment, mentioning what specifically drove the decision (cite the retry_count or history if it mattered)"}}"""
+{{"action": "one_of_the_four_options_above", "reasoning": "1-2 sentence explanation of your judgment for the merchant's internal audit log, mentioning what specifically drove the decision (cite the retry_count or history if it mattered)", "customer_message": "A short, warm, honest 1-2 sentence message to show the CUSTOMER directly. Do not mention internal reasoning, retry counts, or error codes. Just tell them clearly what's happening and what to expect next."}}"""
 
 
 def call_llm(prompt, max_retries=3):
@@ -113,11 +112,12 @@ def parse_llm_response(raw_text):
     parsed = json.loads(cleaned)
     action = parsed.get("action")
     reasoning = parsed.get("reasoning", "").strip()
+    customer_message = parsed.get("customer_message", "").strip()
 
     if action not in VALID_ACTIONS:
         raise ValueError(f"LLM returned invalid action: {action}")
 
-    return action, reasoning
+    return action, reasoning, customer_message
 
 
 def run_reasoning_layer(dry_run=False):
@@ -144,21 +144,25 @@ def run_reasoning_layer(dry_run=False):
 
         try:
             raw = call_llm(prompt)
-            action, reasoning = parse_llm_response(raw)
+            action, reasoning, customer_message = parse_llm_response(raw)
         except Exception as e:
             print(f"  ⚠️ {event['payment_id']}: LLM call/parse failed ({e}) — falling back to escalate_to_merchant")
-            action, reasoning = "escalate_to_merchant", f"LLM reasoning failed ({type(e).__name__}), escalated for manual review as a safe default."
+            action = "escalate_to_merchant"
+            reasoning = f"LLM reasoning failed ({type(e).__name__}), escalated for manual review as a safe default."
+            customer_message = "We're reviewing this payment. Our team will follow up with you shortly."
 
         print(f"  {event['payment_id']} ({event['error_code']}, retry_count={event['retry_count']}) -> {action}")
         print(f"    reasoning: {reasoning}")
+        print(f"    customer_message: {customer_message}")
 
         if not dry_run:
             supabase.table("payment_events").update({
                 "action_taken": action,
                 "reasoning": reasoning,
+                "customer_message": customer_message,
             }).eq("payment_id", event["payment_id"]).execute()
 
-        results.append((event["payment_id"], action, reasoning))
+        results.append((event["payment_id"], action, reasoning, customer_message))
 
         time.sleep(2)  # be polite to the shared free-tier pool
 
