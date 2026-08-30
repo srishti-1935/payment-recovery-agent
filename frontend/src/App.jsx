@@ -38,7 +38,7 @@ function isRealPayment(paymentId) {
 }
 
 function formatRupees(paise) {
-  return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+  return `\u20B9${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
 }
 
 function computeMetrics(events) {
