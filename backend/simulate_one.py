@@ -54,7 +54,7 @@ def simulate_one_event():
     print(f"Execution note: {execution_note}")
 
     client = get_supabase_client()
-    client.table("payment_events").insert(event).execute()
+    client.table("payment_events").upsert(event, on_conflict="payment_id")
     print("Saved to Supabase. Check the dashboard -- it should appear within ~8s.")
 
     return event
