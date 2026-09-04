@@ -197,7 +197,7 @@ export default function App() {
             <BarChart data={barData}>
               <XAxis dataKey="name" tick={{ fill: '#7a7357', fontSize: 12 }} axisLine={{ stroke: '#e6ddc6' }} tickLine={false} /><YAxis tick={{ fill: '#7a7357', fontSize: 12 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ background: '#fffefb', border: '1px solid #e6ddc6', borderRadius: 8, fontSize: 12, color: '#2f2a1f' }} cursor={{ fill: 'rgba(75,83,32,0.06)' }} />
-              <Bar dataKey="count" fill="#4b5320" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" fill="#2f6fed" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
