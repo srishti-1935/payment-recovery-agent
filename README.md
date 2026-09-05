@@ -12,7 +12,8 @@ When a UPI/card payment is disrupted mid-transaction, a customer's money can be 
 
 PayResQ detects these ambiguous/failed payment states, reasons about the right response per case, executes it, notifies the customer honestly, and logs every decision for a full audit trail — live, not just in a batch.
 
-(SCREENSHOT: full dashboard hero + metrics + simulate panel, from the live Vercel URL)
+<img width="1901" height="1078" alt="image" src="https://github.com/user-attachments/assets/5ff89205-7b62-43af-ae77-65a5c00c0110" />
+
 
 ## Beyond the batch — a live, reactive system
 
@@ -27,7 +28,46 @@ PayResQ detects these ambiguous/failed payment states, reasons about the right r
 
 Payment event (webhook or simulated) → **Classify** (deterministic rules for clear cases) → **Reason** (LLM, only for genuinely ambiguous cases) → **Act** (bounded, gated execution — auto-retry / wait-and-reassure / notify / escalate) → **Log** (Supabase audit trail: classification, action, internal reasoning, customer-facing message, timestamp)
 
-(SCREENSHOT: architecture diagram, if you have the one generated earlier in the project)
+```mermaid
+flowchart TD
+    subgraph Client["Frontend — React (Vite), deployed on Vercel"]
+        UI[Dashboard: metrics, charts,<br/>filterable table, expandable<br/>reasoning + customer message]
+    end
+
+    subgraph Backend["Backend — FastAPI, deployed on Render"]
+        Webhook[/POST /webhook/razorpay/]
+        SimOne[/POST /simulate-one/]
+        Rules[Rules layer<br/>deterministic classification]
+        Reasoning[Reasoning layer<br/>LLM via OpenRouter<br/>— ambiguous cases only]
+        Executor[Action executor<br/>double-execution guard]
+    end
+
+    subgraph Batch["Batch pipeline — run on demand"]
+        Sim[simulator.py]
+        BatchRules[rules.py]
+        BatchReasoning[reasoning.py]
+        BatchExec[executor.py]
+        Results[results.py]
+    end
+
+    Razorpay[(Razorpay Test-Mode API<br/>orders, payments, webhooks)]
+    Supabase[(Supabase — Postgres<br/>payment_events audit log<br/>unique on payment_id)]
+
+    Razorpay -- "real payment.failed /\npayment.captured event" --> Webhook
+    Webhook --> Rules
+    SimOne --> Rules
+    Rules -- "clear case" --> Executor
+    Rules -- "ambiguous case" --> Reasoning
+    Reasoning --> Executor
+    Executor -- "verify real payments" --> Razorpay
+    Executor -- "upsert decision" --> Supabase
+
+    Sim --> BatchRules --> BatchReasoning --> BatchExec --> Results
+    BatchExec -- "upsert decision" --> Supabase
+
+    UI -- "poll for updates" --> Supabase
+    UI -- "trigger live demo event" --> SimOne
+```
 
 ## Results (full batch run)
 
@@ -41,7 +81,8 @@ Ran the complete pipeline on an 82-event batch — 80 simulated Razorpay-style p
 - **Late-authorization cases handled** (the core scenario this project targets): 8
 - **Ambiguous cases resolved via LLM reasoning:** 10, including real Razorpay test payments
 
-(SCREENSHOT: results.py terminal output, or the dashboard's classification breakdown pie chart)
+<img width="1401" height="737" alt="image" src="https://github.com/user-attachments/assets/43ce841c-0d9a-4fe7-9fc4-a38db64212a5" />
+
 
 ## Tech stack
 
@@ -59,7 +100,8 @@ Ran the complete pipeline on an 82-event batch — 80 simulated Razorpay-style p
 3. Watch the new row appear in the table with a live highlight, fully classified and reasoned
 4. Click any row to expand and see both the customer-facing message and the internal audit reasoning side by side
 
-(SCREENSHOT: the simulate panel mid-use, or the highlighted new row right after triggering)
+<img width="1397" height="465" alt="image" src="https://github.com/user-attachments/assets/4be4a0c0-6b60-49a3-a895-3e03f932877e" />
+
 
 ## Setup (local development)
 
