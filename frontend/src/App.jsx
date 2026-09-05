@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { supabase } from './supabaseClient'
 import './App.css'
@@ -24,13 +24,13 @@ const FILTERS = [
 ]
 
 const CLASSIFICATION_COLORS = {
-  success: '#3f7d5c',
-  late_auth: '#b8863b',
-  ambiguous: '#6b7a3f',
-  no_retry: '#c1553c',
-  cancelled: '#a39d83',
-  escalate: '#8b3a3a',
-  safe_retry: '#3f7d5c',
+  success: '#4A3226',
+  late_auth: '#F26D85',
+  ambiguous: '#C98A5E',
+  no_retry: '#8C5A45',
+  cancelled: '#D9C9A8',
+  escalate: '#B23A52',
+  safe_retry: '#6B8F71',
 }
 
 function isRealPayment(paymentId) {
@@ -39,6 +39,37 @@ function isRealPayment(paymentId) {
 
 function formatRupees(paise) {
   return `\u20B9${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+}
+
+function useCountUp(target, duration = 900) {
+  const [value, setValue] = useState(0)
+  const startRef = useRef(null)
+
+  useEffect(() => {
+    if (target === 0) { setValue(0); return }
+    let frame
+    const step = (timestamp) => {
+      if (!startRef.current) startRef.current = timestamp
+      const progress = Math.min((timestamp - startRef.current) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(target * eased)
+      if (progress < 1) frame = requestAnimationFrame(step)
+    }
+    frame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frame)
+  }, [target, duration])
+
+  return value
+}
+
+function AnimatedRupees({ paise }) {
+  const animated = useCountUp(paise)
+  return <>{formatRupees(animated)}</>
+}
+
+function AnimatedNumber({ value }) {
+  const animated = useCountUp(value)
+  return <>{Math.round(animated)}</>
 }
 
 function computeMetrics(events) {
@@ -77,7 +108,7 @@ function computeChartData(events) {
   const pieData = Object.entries(classificationCounts).map(([name, value]) => ({
     name,
     value,
-    color: CLASSIFICATION_COLORS[name] || '#8a93a6',
+    color: CLASSIFICATION_COLORS[name] || '#D9C9A8',
   }))
 
   const barData = Object.entries(statusCounts).map(([name, count]) => ({ name, count }))
@@ -138,31 +169,32 @@ export default function App() {
 
   return (
     <div className="dashboard">
-      <header>
+      <header className="hero">
+        <div className="hero-badge">Payment Recovery, automated</div>
         <h1>PayResQ</h1>
-        <p className="subtitle">AI-powered payment recovery for Razorpay checkouts</p>
+        <p className="subtitle">AI-powered recovery for Razorpay checkouts — modern, safe, transparent.</p>
       </header>
 
       <section className="metrics">
         <div className="metric-card risk">
           <span className="label">At Risk</span>
-          <span className="value">{formatRupees(metrics.atRisk)}</span>
+          <span className="value"><AnimatedRupees paise={metrics.atRisk} /></span>
         </div>
         <div className="metric-card recovered">
           <span className="label">Recovered</span>
-          <span className="value">{formatRupees(metrics.recovered)}</span>
+          <span className="value"><AnimatedRupees paise={metrics.recovered} /></span>
         </div>
         <div className="metric-card unresolved">
           <span className="label">Unresolved</span>
-          <span className="value">{formatRupees(metrics.unresolved)}</span>
+          <span className="value"><AnimatedRupees paise={metrics.unresolved} /></span>
         </div>
         <div className="metric-card">
           <span className="label">Escalated</span>
-          <span className="value">{metrics.escalatedCount}</span>
+          <span className="value"><AnimatedNumber value={metrics.escalatedCount} /></span>
         </div>
         <div className="metric-card">
           <span className="label">Held Back</span>
-          <span className="value">{metrics.correctlyNoAction}</span>
+          <span className="value"><AnimatedNumber value={metrics.correctlyNoAction} /></span>
         </div>
       </section>
 
@@ -177,7 +209,7 @@ export default function App() {
                     <Cell key={i} fill={entry.color} stroke="none" />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#fffefb', border: '1px solid #e6ddc6', borderRadius: 8, fontSize: 12, color: '#2f2a1f' }} />
+                <Tooltip contentStyle={{ background: '#FFFDF8', border: '1px solid #EAD9BE', borderRadius: 8, fontSize: 12, color: '#4A3226' }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="chart-legend">
@@ -195,9 +227,10 @@ export default function App() {
           <h3>Payments by status</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={barData}>
-              <XAxis dataKey="name" tick={{ fill: '#7a7357', fontSize: 12 }} axisLine={{ stroke: '#e6ddc6' }} tickLine={false} /><YAxis tick={{ fill: '#7a7357', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: '#fffefb', border: '1px solid #e6ddc6', borderRadius: 8, fontSize: 12, color: '#2f2a1f' }} cursor={{ fill: 'rgba(75,83,32,0.06)' }} />
-              <Bar dataKey="count" fill="#2f6fed" radius={[6, 6, 0, 0]} />
+              <XAxis dataKey="name" tick={{ fill: '#8C7A5E', fontSize: 12 }} axisLine={{ stroke: '#EAD9BE' }} tickLine={false} />
+              <YAxis tick={{ fill: '#8C7A5E', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: '#FFFDF8', border: '1px solid #EAD9BE', borderRadius: 8, fontSize: 12, color: '#4A3226' }} cursor={{ fill: 'rgba(242,109,133,0.08)' }} />
+              <Bar dataKey="count" fill="#F26D85" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -263,16 +296,16 @@ export default function App() {
                   <td>{ACTION_LABELS[e.action_taken] || e.action_taken || '—'}</td>
                 </tr>
                 {expandedId === e.payment_id && (
-  <tr className="reasoning-row">
-    <td colSpan={5}>
-      {e.customer_message && (
-        <div className="customer-message"><strong>Customer sees:</strong> "{e.customer_message}"</div>
-      )}
-      <div><strong>Internal reasoning:</strong> {e.reasoning || 'No reasoning recorded (rules-based, no LLM call needed).'}</div>
-      {e.error_description && <div className="error-desc"><strong>Error:</strong> {e.error_description}</div>}
-    </td>
-  </tr>
-)}
+                  <tr className="reasoning-row">
+                    <td colSpan={5}>
+                      {e.customer_message && (
+                        <div className="customer-message"><strong>Customer sees:</strong> "{e.customer_message}"</div>
+                      )}
+                      <div><strong>Internal reasoning:</strong> {e.reasoning || 'No reasoning recorded (rules-based, no LLM call needed).'}</div>
+                      {e.error_description && <div className="error-desc"><strong>Error:</strong> {e.error_description}</div>}
+                    </td>
+                  </tr>
+                )}
               </>
             ))}
           </tbody>
