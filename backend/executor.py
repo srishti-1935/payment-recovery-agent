@@ -25,7 +25,7 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 # Razorpay-generated string. Our simulated ones use the "pay_sim_" prefix
 # deliberately so we can tell them apart without a separate DB flag.
 def is_real_payment(payment_id):
-    return not payment_id.startswith("pay_sim_")
+    return not (payment_id.startswith("pay_sim_") or payment_id.startswith("pay_live_"))
 
 
 def get_supabase_client():
