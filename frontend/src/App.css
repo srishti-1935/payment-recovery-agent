@@ -98,7 +98,8 @@ h1, h3 { font-family: 'Fraunces', serif; }
   font-size: 56px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1;
+  line-height: 1.15;
+  padding-bottom: 6px;
   background: linear-gradient(120deg, #FFFDF8 20%, #F7CFD9 45%, #F26D85 65%, #FFFDF8 90%);
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -391,4 +392,118 @@ th {
 @media (max-width: 800px) {
   .charts-row { grid-template-columns: 1fr; }
   .hero h1 { font-size: 38px; }
+}
+
+/* Simulate panel — hero-integrated */
+.simulate-panel {
+  background: rgba(242,109,133,0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(242,109,133,0.35);
+  box-shadow: 0 8px 40px rgba(242,109,133,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 26px 28px;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.simulate-panel::before {
+  content: '● LIVE';
+  position: absolute;
+  top: -11px;
+  left: 24px;
+  background: #F26D85;
+  color: #1C1410;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.simulate-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 19px;
+  color: #FFFDF8;
+  font-family: 'Fraunces', serif;
+}
+
+.simulate-header p {
+  margin: 0 0 20px 0;
+  font-size: 13px;
+  color: rgba(247,240,221,0.55);
+}
+
+.simulate-controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(247,240,221,0.5);
+  font-weight: 600;
+}
+
+.field input {
+  width: 110px;
+}
+
+.field select {
+  min-width: 260px;
+}
+
+.field input, .field select {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #FFFDF8;
+  padding: 11px 14px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+.field input:focus, .field select:focus {
+  outline: none;
+  border-color: #F26D85;
+}
+
+.simulate-btn {
+  background: linear-gradient(120deg, #F26D85, #E0546D);
+  color: #FFFDF8;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(242, 109, 133, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.simulate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(242, 109, 133, 0.55);
+}
+
+.simulate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.simulate-error {
+  margin-top: 14px;
+  color: #F0879A;
+  font-size: 13px;
 }

@@ -3,6 +3,8 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 import { supabase } from './supabaseClient'
 import './App.css'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const ACTION_LABELS = {
   auto_retry: 'Auto-retried',
   wait_and_reassure: 'Waiting (no retry)',
@@ -48,6 +50,7 @@ function useCountUp(target, duration = 900) {
   useEffect(() => {
     if (target === 0) { setValue(0); return }
     let frame
+    startRef.current = null
     const step = (timestamp) => {
       if (!startRef.current) startRef.current = timestamp
       const progress = Math.min((timestamp - startRef.current) / duration, 1)
@@ -116,12 +119,79 @@ function computeChartData(events) {
   return { pieData, barData }
 }
 
+function SimulatePanel({ errorCodes, onSimulated }) {
+  const [amount, setAmount] = useState('500')
+  const [errorCode, setErrorCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+
+  async function handleSimulate() {
+    setLoading(true)
+    setErrorMsg('')
+    try {
+      const res = await fetch(`${API_URL}/simulate-event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Math.round(parseFloat(amount) * 100),
+          error_code: errorCode || null,
+        }),
+      })
+      if (!res.ok) throw new Error(`Server responded ${res.status}`)
+      const result = await res.json()
+      onSimulated(result)
+    } catch (err) {
+      setErrorMsg('Could not reach the live backend. It may be waking up from sleep — try again in ~20s.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="simulate-panel">
+      <div className="simulate-header">
+        <h3>Simulate a live payment</h3>
+        <p>Runs a real event through the live pipeline — classify, reason, act — right now.</p>
+      </div>
+      <div className="simulate-controls">
+        <div className="field">
+          <label>Amount (₹)</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            min="1"
+          />
+        </div>
+        <div className="field">
+          <label>Outcome</label>
+          <select value={errorCode} onChange={(e) => setErrorCode(e.target.value)}>
+            <option value="">Success (no error)</option>
+            {Object.entries(errorCodes).map(([code, bucket]) => (
+              <option key={code} value={code}>
+                {code.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')} — {bucket.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button className="simulate-btn" onClick={handleSimulate} disabled={loading}>
+          {loading ? 'Running pipeline…' : 'Trigger event'}
+        </button>
+      </div>
+      {errorMsg && <div className="simulate-error">{errorMsg}</div>}
+    </div>
+  )
+}
+
 export default function App() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState(null)
   const [activeFilter, setActiveFilter] = useState('all')
   const [sortByAmount, setSortByAmount] = useState(null)
+  const [errorCodes, setErrorCodes] = useState({})
+  const [justAddedId, setJustAddedId] = useState(null)
 
   async function fetchEvents() {
     const { data, error } = await supabase
@@ -137,11 +207,28 @@ export default function App() {
     setLoading(false)
   }
 
+  async function fetchErrorCodes() {
+    try {
+      const res = await fetch(`${API_URL}/error-codes`)
+      if (res.ok) setErrorCodes(await res.json())
+    } catch (err) {
+      console.error('Could not load error codes from backend:', err)
+    }
+  }
+
   useEffect(() => {
     fetchEvents()
+    fetchErrorCodes()
     const interval = setInterval(fetchEvents, 8000)
     return () => clearInterval(interval)
   }, [])
+
+  function handleSimulated(result) {
+    setJustAddedId(result.payment_id)
+    fetchEvents()
+    setExpandedId(result.payment_id)
+    setTimeout(() => setJustAddedId(null), 2500)
+  }
 
   if (loading) return <div className="loading">Loading payment events…</div>
 
@@ -174,6 +261,8 @@ export default function App() {
         <h1>PayResQ</h1>
         <p className="subtitle">AI-powered recovery for Razorpay checkouts — modern, safe, transparent.</p>
       </header>
+
+      <SimulatePanel errorCodes={errorCodes} onSimulated={handleSimulated} />
 
       <section className="metrics">
         <div className="metric-card risk">
@@ -283,7 +372,7 @@ export default function App() {
               <>
                 <tr
                   key={e.payment_id}
-                  className="event-row"
+                  className={`event-row ${justAddedId === e.payment_id ? 'just-added' : ''}`}
                   onClick={() => setExpandedId(expandedId === e.payment_id ? null : e.payment_id)}
                 >
                   <td>
