@@ -3,7 +3,7 @@
 **🔗 Live dashboard:** https://payment-recovery-agent-two.vercel.app
 **🔗 Live backend:** https://payresq-backend.onrender.com
 
-Built for Razorpay's AI Buildathon — Track 03: AI Revenue Recovery.
+Built for Razorpay's AI Buildathon
 
 ## The problem
 
